@@ -56,10 +56,36 @@ func main() {
 }
 
 func plot() {
-	for x := 0; x < sizeX; x++ {
-		for y := 0; y < sizeY; y++ {
-			ctx.Set("fillStyle", fmt.Sprintf("#%02x%02x00", int(float64(x)/float64(sizeX)*255), int(float64(y)/float64(sizeY)*255)))
-			ctx.Call("fillRect", x, y, 1, 1)
+	imgDataHolder := ctx.Call("getImageData", 0, 0, sizeX, sizeY)
+	if !imgDataHolder.Truthy() {
+		log.Fatal("Failed to get canvas image data holder")
+	}
+
+	imgData := imgDataHolder.Get("data")
+	if !imgData.Truthy() {
+		log.Fatal("Failed to get canvas image data")
+	}
+	imgDataW := imgDataHolder.Get("width")
+	if !imgData.Truthy() {
+		log.Fatal("Failed to get canvas image data width")
+	}
+	sizeX := imgDataW.Int()
+	imgDataH := imgDataHolder.Get("height")
+	if !imgData.Truthy() {
+		log.Fatal("Failed to get canvas image data height")
+	}
+	sizeY := imgDataH.Int()
+
+	for y := 0; y < sizeY; y++ {
+		for x := 0; x < sizeX; x++ {
+			r, g, b, a := mandelgo.GetColor(float64(x)/float64(sizeX)*(virt_x1-virt_x0)+virt_x0, float64(y)/float64(sizeY)*(virt_y1-virt_y0)+virt_y0).RGBA()
+			imgData.SetIndex((y*sizeX+x)*4, uint8(r))
+			imgData.SetIndex((y*sizeX+x)*4+1, uint8(g))
+			imgData.SetIndex((y*sizeX+x)*4+2, uint8(b))
+			imgData.SetIndex((y*sizeX+x)*4+3, uint8(a))
 		}
 	}
+
+	ctx.Call("putImageData", imgDataHolder, 0, 0)
+}
 }
