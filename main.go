@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 	"syscall/js"
+
+	mandelgo "github.com/Salicorne/mandelgo/mandelgo"
 )
 
 var (
-	ctx    js.Value
-	window js.Value
-	sizeX  int
-	sizeY  int
+	ctx   js.Value
+	sizeX int
+	sizeY int
 )
 
 func main() {
@@ -31,7 +32,7 @@ func main() {
 		log.Fatal("Failed to initialize DOM canvas")
 	}
 
-	ctx := canvas.Call("getContext", "2d")
+	ctx = canvas.Call("getContext", "2d")
 	if !ctx.Truthy() {
 		log.Fatal("Failed to initialize canvas context")
 	}
@@ -45,4 +46,20 @@ func main() {
 
 	canvas.Set("width", rect.Get("width").Int())
 	canvas.Set("height", rect.Get("height").Int())
+
+	sizeX = rect.Get("width").Int()
+	sizeY = rect.Get("height").Int()
+
+	log.Println(mandelgo.GetColor(0, 0))
+
+	plot()
+}
+
+func plot() {
+	for x := 0; x < sizeX; x++ {
+		for y := 0; y < sizeY; y++ {
+			ctx.Set("fillStyle", fmt.Sprintf("#%02x%02x00", int(float64(x)/float64(sizeX)*255), int(float64(y)/float64(sizeY)*255)))
+			ctx.Call("fillRect", x, y, 1, 1)
+		}
+	}
 }
