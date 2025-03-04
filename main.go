@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ctx   js.Value
-	sizeX int
-	sizeY int
+	ctx    js.Value
+	loader js.Value
+	sizeX  int
+	sizeY  int
 
 	virt_x0 = -2.0
 	virt_x1 = 1.0
@@ -30,6 +31,11 @@ func main() {
 	jsDoc := js.Global().Get("document")
 	if !jsDoc.Truthy() {
 		log.Fatal("Failed to initialize DOM document")
+	}
+
+	loader = jsDoc.Call("getElementById", "loader")
+	if !loader.Truthy() {
+		log.Fatal("Failed to initialize DOM loader")
 	}
 
 	canvas := jsDoc.Call("getElementById", "canvas")
@@ -96,6 +102,7 @@ func plot() {
 	}
 
 	ctx.Call("putImageData", imgDataHolder, 0, 0)
+	loader.Set("textContent", "")
 }
 
 func wasm_onclick(this js.Value, p []js.Value) any {
