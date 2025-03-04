@@ -12,6 +12,11 @@ var (
 	ctx   js.Value
 	sizeX int
 	sizeY int
+
+	virt_x0 = -2.0
+	virt_x1 = 1.0
+	virt_y0 = -1.0
+	virt_y1 = 1.0 // will be adjusted depending on ratio
 )
 
 func main() {
@@ -50,9 +55,13 @@ func main() {
 	sizeX = rect.Get("width").Int()
 	sizeY = rect.Get("height").Int()
 
-	log.Println(mandelgo.GetColor(0, 0))
+	virt_y1 = (float64(sizeY)*(virt_x1-virt_x0) + float64(sizeX)*virt_y0) / float64(sizeX)
+
+	js.Global().Set("wasm_onclick", js.FuncOf(wasm_onclick))
 
 	plot()
+
+	select {}
 }
 
 func plot() {
@@ -88,4 +97,31 @@ func plot() {
 
 	ctx.Call("putImageData", imgDataHolder, 0, 0)
 }
+
+func wasm_onclick(this js.Value, p []js.Value) any {
+	if len(p) != 2 {
+		fmt.Printf("Invalid call to wasm_onclick with %d arguments", len(p))
+		return nil
+	}
+	x := p[0].Float()
+	y := p[1].Float()
+
+	dx := x / float64(sizeX)
+	dy := y / float64(sizeY)
+	// fmt.Printf("Clicked on %v/%v = %v ;  %v/%v = %v\n", x, sizeX, dx, y, sizeY, dy)
+
+	zoom := 2.5
+
+	w := (virt_x1 - virt_x0)
+	h := (virt_y1 - virt_y0)
+
+	virt_x0 = w*(dx-1/(2*zoom)) + virt_x0
+	virt_y0 = h*(dy-1/(2*zoom)) + virt_y0
+
+	virt_x1 = virt_x0 + w/zoom
+	virt_y1 = virt_y0 + h/zoom
+
+	plot()
+
+	return nil
 }
